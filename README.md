@@ -30,7 +30,7 @@ Run local a local datastore emulator run
 Then you need to make the main.py use this datastore.
 In a shell, that should be possible by setting an environment variable:
 
-    $ sxport DATASTORE_EMULATOR_HOST=localhost:808
+    $ export DATASTORE_EMULATOR_HOST=localhost:8081
 
 After that, one can run (and debug) the app locally with
 
