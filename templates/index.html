@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <title>Datastore and Firebase Auth Example</title>
+
+  <!-- See https://github.com/firebase/firebaseui-web. -->
+  <!-- [START gae_python39_auth_init_firebase] -->
+  <!-- [START gae_python3_auth_init_firebase] -->
+  <!-- *******************************************************************************************
+       * TODO(DEVELOPER): Paste the initialization snippet from:
+       * http://console.firebase.google.com > Overview > Add Firebase to your web app.
+       ***************************************************************************************** -->
+  <!-- [END gae_python3_auth_init_firebase] -->
+  <!-- [END gae_python39_auth_init_firebase] -->
+    <!--// Import the functions you need from the SDKs you need -->
+    <script src="https://www.gstatic.com/firebasejs/7.14.5/firebase-app.js"></script>;
+
+   <!-- // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-auth.js"></script>
+    <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0EAJt3vXDvwsv0ZjEIgODMZArSJVZlgc",
+      authDomain: "skojjt-3.firebaseapp.com",
+      projectId: "skojjt-3",
+      storageBucket: "skojjt-3.appspot.com",
+      messagingSenderId: "137764040190",
+      appId: "1:137764040190:web:8d71d7486a1394ddd7a4af"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <!-- [START gae_python39_auth_include_firebaseui] -->
+  <!-- [START gae_python3_auth_include_firebaseui] -->
+  <script src="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.css">
+  <!-- [END gae_python3_auth_include_firebaseui] -->
+  <!-- [END gae_python39_auth_include_firebaseui] -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+
+<h1>Datastore and Firebase Auth Example</h1>
+
+<!-- [START gae_python39_auth_firebase_html] -->
+<!-- [START gae_python3_auth_firebase_html] -->
+<div id="firebaseui-auth-container"></div>
+
+<button id="sign-out" hidden=true>Sign Out</button>
+
+<div id="login-info" hidden=true>
+  <h2>Login info:</h2>
+  {% if user_data %}
+    <dl>
+      <dt>Name</dt><dd>{{ user_data['displayName'] }}</dd>
+      <dt>Email</dt><dd>{{ user_data['email'] }}</dd>
+      <dt>Last 10 visits</dt><dd>
+	{% for time in times %}
+          <p>{{ time['timestamp'] }}</p>
+        {% endfor %} </dd>
+    </dl>
+  {% elif error_message %}
+    <p>Error: {{ error_message }}</p>
+  {% endif %}
+</div>
+<!-- [END gae_python3_auth_firebase_html] -->
+<!-- [END gae_python39_auth_firebase_html] -->
+</body>
+</html>
