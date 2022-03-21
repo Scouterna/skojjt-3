@@ -58,8 +58,8 @@
       <dt>Name</dt><dd>{{ user_data['displayName'] }}</dd>
       <dt>Email</dt><dd>{{ user_data['email'] }}</dd>
       <dt>Last 10 visits</dt><dd>
-	{% for time in times %}
-          <p>{{ time['timestamp'] }}</p>
+	{% for timestamp in times %}
+          <p>{{ timestamp }}</p>
         {% endfor %} </dd>
     </dl>
   {% elif error_message %}

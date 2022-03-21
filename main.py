@@ -16,39 +16,42 @@ import datetime
 
 from flask import Flask, render_template, request
 from google.auth.transport import requests
-from google.cloud import datastore
+from google.cloud import ndb
 import google.oauth2.id_token
 
 firebase_request_adapter = requests.Request()
 
 # [START gae_python39_datastore_store_and_fetch_user_times]
 # [START gae_python3_datastore_store_and_fetch_user_times]
-datastore_client = datastore.Client()
 
 # [END gae_python3_datastore_store_and_fetch_user_times]
 # [END gae_python39_datastore_store_and_fetch_user_times]
 app = Flask(__name__)
 
 
+class Visit(ndb.Model):
+    timestamp = ndb.DateTimeProperty()
+
+
 # [START gae_python39_datastore_store_and_fetch_user_times]
 # [START gae_python3_datastore_store_and_fetch_user_times]
 def store_time(email, dt):
-    entity = datastore.Entity(key=datastore_client.key('User', email, 'visit'))
-    entity.update({
-        'timestamp': dt
-    })
-
-    datastore_client.put(entity)
+    client = ndb.Client()
+    with client.context():
+        ancestor_key = ndb.Key("User", email)
+        visit = Visit(parent=ancestor_key,
+                      timestamp=dt)
+        visit.put(visit)
 
 
 def fetch_times(email, limit):
-    ancestor = datastore_client.key('User', email)
-    query = datastore_client.query(kind='visit', ancestor=ancestor)
-    query.order = ['-timestamp']
-
-    times = query.fetch(limit=limit)
-
-    return times
+    client = ndb.Client()
+    with client.context():
+        ancestor_key = ndb.Key('User', email)
+        query = Visit.query(ancestor=ancestor_key).order(-Visit.timestamp)
+        times = [f"{v.timestamp}" for v in query]
+        print(times)
+        return times
 # [END gae_python3_datastore_store_and_fetch_user_times]
 # [END gae_python39_datastore_store_and_fetch_user_times]
 
