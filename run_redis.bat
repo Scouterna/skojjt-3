@@ -1,0 +1,1 @@
+"%ProgramFiles%\redis\redis-server.exe"

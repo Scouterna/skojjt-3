@@ -1,4 +1,8 @@
-Flask==2.0.2
+cachetools
+click==8.0.4
+Flask==2.0.3
+google-auth # ==2.5.0
+google-cloud-datastore==1.15.3
 google-cloud-ndb==1.11.1
-google-auth==2.5.0
 requests==2.27.1
+charset_normalizer==2.0.11

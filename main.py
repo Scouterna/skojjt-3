@@ -1,64 +1,47 @@
-# Copyright 2018 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import datetime
-
 from flask import Flask, render_template, request
 from google.auth.transport import requests
 from google.cloud import ndb
 import google.oauth2.id_token
+from access import checkAccess
+from data import dbcontext, Semester, datastore_client
+
 
 firebase_request_adapter = requests.Request()
 
-# [START gae_python39_datastore_store_and_fetch_user_times]
-# [START gae_python3_datastore_store_and_fetch_user_times]
 
-# [END gae_python3_datastore_store_and_fetch_user_times]
-# [END gae_python39_datastore_store_and_fetch_user_times]
 app = Flask(__name__)
 
 
-class Visit(ndb.Model):
-    timestamp = ndb.DateTimeProperty()
+@app.route('/login/')
+def login():
+    return render_template(
+        'login.html')
 
 
-# [START gae_python39_datastore_store_and_fetch_user_times]
-# [START gae_python3_datastore_store_and_fetch_user_times]
-def store_time(email, dt):
-    client = ndb.Client()
-    with client.context():
-        ancestor_key = ndb.Key("User", email)
-        visit = Visit(parent=ancestor_key,
-                      timestamp=dt)
-        visit.put(visit)
-
-
-def fetch_times(email, limit):
-    client = ndb.Client()
-    with client.context():
-        ancestor_key = ndb.Key('User', email)
-        query = Visit.query(ancestor=ancestor_key).order(-Visit.timestamp)
-        times = [f"{v.timestamp}" for v in query]
-        print(times)
-        return times
-# [END gae_python3_datastore_store_and_fetch_user_times]
-# [END gae_python39_datastore_store_and_fetch_user_times]
-
-
-# [START gae_python39_datastore_render_user_times]
-# [START gae_python3_datastore_render_user_times]
+# login flow -> @checkAccess -> /login -> @checkAccess -> / 
 @app.route('/')
+@dbcontext
+@checkAccess
+def start(user):
+    return render_template(
+        'start.html',
+        user=user,
+        starturl='',
+        personsurl='',
+        badgesurl='',
+        logouturl='')
+
+
+@app.route('/semester_test')
+@dbcontext
+def semester_test():
+    semester = Semester.getOrCreateCurrent()
+    return semester.getname()
+
+
+
+@app.route('/test_firebase_login')
 def root():
     # Verify Firebase auth.
     id_token = request.cookies.get("token")
@@ -89,12 +72,9 @@ def root():
             # verification checks fail.
             error_message = str(exc)
 
-    return render_template(
-        'index.html',
-        user_data=user_data, error_message=error_message, times=times)
-# [END gae_python3_datastore_render_user_times]
-# [END gae_python39_datastore_render_user_times]
 
+
+##############################################################################
 
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
@@ -106,3 +86,5 @@ if __name__ == '__main__':
     # http://flask.pocoo.org/docs/1.0/quickstart/#static-files. Once deployed,
     # App Engine itself will serve those files as configured in app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)
+
+##############################################################################
