@@ -1,18 +1,3 @@
-/**
- * Copyright 2018, Google LLC
- * Licensed under the Apache License, Version 2.0 (the `License`);
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an `AS IS` BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 'use strict';
 
 // TODO: Add SDKs for Firebase products that you want to use
@@ -20,48 +5,78 @@
 
 
 window.addEventListener('load', function () {
-  // [START gae_python39_auth_signout]
-  // [START gae_python3_auth_signout]
   document.getElementById('sign-out').onclick = function () {
     firebase.auth().signOut();
   };
-  // [END gae_python3_auth_signout]
-  // [END gae_python39_auth_signout]
 
-  // [START gae_python39_auth_UIconfig_variable]
-  // [START gae_python3_auth_UIconfig_variable]
   // FirebaseUI config.
   const scoutid_provider = new firebase.auth.SAMLAuthProvider('saml.scoutid');
   var uiConfig = {
-    signInSuccessUrl: '/',
+    signInSuccessUrl: '/sign_in_success/',
     signInOptions: [
       'saml.scoutid'
-      // Remove any lines corresponding to providers you did not check in
-      // the Firebase console.
-      //firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-      //firebase.auth.EmailAuthProvider.PROVIDER_ID,
     ],
     // Terms of service url.
     tosUrl: '<your-tos-url>'
   };
-  // [END gae_python3_auth_UIconfig_variable]
-  // [END gae_python39_auth_UIconfig_variable]
 
-  // [START gae_python39_auth_request]
-  // [START gae_python3_auth_request]
+  function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+       var c = ca[i];
+       while (c.charAt(0)==' ') c = c.substring(1);
+       if(c.indexOf(name) == 0)
+          return c.substring(name.length,c.length);
+    }
+    return "";
+  }
+
+  function onsuccess() {
+    console.log("Successfully sent login to server");
+  }
+
+  function onfailure() {
+    console.log("Failed to send login to server");
+    alert("Failed to send login to server");
+  }
+
+  function postIdTokenToSessionLogin(idToken, csrfToken) {
+    var XHR = new XMLHttpRequest();
+    var formdata = 'idToken=' + idToken + '&' + 'csrfToken=' + csrfToken;
+
+    XHR.addEventListener('load', function(event) 
+    {
+      if (onsuccess) onsuccess();
+    });
+
+    XHR.addEventListener('error', function(event) 
+    {
+      if (onfailure) onfailure();
+    });
+
+    XHR.open('POST', '/session_login/');
+    XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    XHR.send(formdata);
+  }
+
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
       // User is signed in, so display the "sign out" button and login info.
       document.getElementById('sign-out').hidden = false;
       document.getElementById('login-info').hidden = false;
-      console.log(`Signed in as ${user.displayName} (${user.email})`);
-      user.getIdToken().then(function (token) {
+      console.log(`Signed in as (${user.uid})`);
+      user.getIdToken().then(function (idToken) {
         // Add the token to the browser's cookies. The server will then be
         // able to verify the token against the API.
         // SECURITY NOTE: As cookies can easily be modified, only put the
         // token (which is verified server-side) in a cookie; do not add other
         // user information.
-        document.cookie = "token=" + token;
+        console.log("trying to get csrfToken");
+        const csrfToken = getCookie('csrfToken');
+        console.log("setting the document.cookie: token=" + idToken);
+        document.cookie = "token=" + idToken
+        return postIdTokenToSessionLogin(idToken, csrfToken);
       });
     } else {
       // User is signed out.
@@ -73,12 +88,11 @@ window.addEventListener('load', function () {
       document.getElementById('sign-out').hidden = true;
       document.getElementById('login-info').hidden = true;
       // Clear the token cookie.
+      console.log("clearing the document.cookie");
       document.cookie = "token=";
     }
   }, function (error) {
     console.log(error);
     alert('Unable to log in: ' + error)
   });
-  // [END gae_python3_auth_request]
-  // [END gae_python39_auth_request]
 });

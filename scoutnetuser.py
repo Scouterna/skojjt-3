@@ -9,7 +9,8 @@ class ScoutnetUser():
         self.group_no = group_no
         self.group_id = group_id
         self.member_registrar = member_registrar
-        self.activeSemester = Semester.getOrCreateCurrent() # TODO: read/write from database
+        # self.activeSemester = Semester.getOrCreateCurrent() # TODO: read/write from database
+        self.activeSemester = None
 
     def getname(self) -> str:
         return self.displayName

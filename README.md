@@ -1,6 +1,22 @@
 # skojjt-3
 New skojjt repo with ScoutID login and Python3
 
+## Bakgrund
+Skojjt använder Python 2.7 i Google App Engine. 
+Support för Python 2.7 kommer ta slut 2024.
+Därför blir 2023 ett år då en ny lösning måste tas fram.
+Ett alternativ är att uppgradera till Python 3.x.
+
+Ganska många saker är borta i Python 3 varianten. Google vill att man ska vara mer flexibel. 
+Men det betyder också att man får göra mer saker själv i kod.
+
+Saker som behöver fixas för att fungera på Python 3.x:
+* Ny inloggningsprocess, ScoutID via Firebase. Automatisk google inloggning finns inte längre.
+* Ny databaskoppling, varje access till databasen kräver ett databas context.
+* Databas-modellen ndb.Model är på väg ut men man kan man använda om man specar versioner av libbar noga.
+* Automatisk Memcache finns inte längre, man får köra en egen Redis.
+
+
 ## Building an appengine app in Python 3
 
 This code comes from Google and is described at a Google page about

@@ -1,35 +1,12 @@
 # -*- coding: utf-8 -*-
 from google.cloud import ndb
 from google.cloud.ndb import context as context_module
-from google.cloud.ndb.global_cache import RedisCache
 import datetime
 import logging
 from functools import wraps
 
 datastore_client = ndb.Client()
 
-# Assume REDIS_CACHE_URL is set in environment (or not).
-# If left unset, this will return `None`, which effectively allows you to turn
-# global cache on or off using the environment.
-global_cache = RedisCache.from_environment()
-# NOTE:  get will call redis.mget and always return a list
-class MemcacheRedisWrapper():
-    def get(self, key):
-        result = global_cache.get(key) # type: list[str]
-        if isinstance(result, list) and len(result) > 0:
-            return result[0]
-        return None
-
-    def set(self, key, value):
-        items = dict()
-        items[key] = value
-        global_cache.set(items)
-
-    def replace(self, key, value):
-        global_cache.delete([key])
-        self.set(key, value)
-
-memcache = MemcacheRedisWrapper()
 
 # Assume GOOGLE_APPLICATION_CREDENTIALS is set in environment.
 client = ndb.Client()

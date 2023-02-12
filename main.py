@@ -1,22 +1,46 @@
+import logging
 import datetime
 from flask import Flask, render_template, request
 from google.auth.transport import requests
 from google.cloud import ndb
 import google.oauth2.id_token
-from access import checkAccess
+from access import checkAccess, login_user_from_id_token
 from data import dbcontext, Semester, datastore_client
+from memcache import memcache
+from scoutnetuser import ScoutnetUser
 
+logging.getLogger().setLevel(logging.INFO) # make sure info logs are displayed on the console
 
 firebase_request_adapter = requests.Request()
-
 
 app = Flask(__name__)
 
 
 @app.route('/login/')
 def login():
+    logging.info("In login()")
     return render_template(
         'login.html')
+
+@app.route('/session_login/', methods=["POST"])
+def session_login():
+    if 'idToken' not in request.form or 'csrfToken' not in request.form:
+        logging.error("Login request is missing data")
+
+    idToken = request.form['idToken']
+    csrfToken = request.form['csrfToken']
+    logging.info("idToken=" + idToken)
+    logging.info("csrfToken" + csrfToken)
+    login_user_from_id_token(idToken)
+    return "", 200
+
+
+@app.route('/sign_in_success/')
+def sign_in_sucess():
+    logging.info("sign_in_success()")
+    logging.info(f"request.cookies={str(request.cookies)}")
+    return render_template(
+        'signed_in.html')
 
 
 # login flow -> @checkAccess -> /login -> @checkAccess -> / 
@@ -24,6 +48,7 @@ def login():
 @dbcontext
 @checkAccess
 def start(user):
+    logging.info("In start()")
     return render_template(
         'start.html',
         user=user,
@@ -38,7 +63,6 @@ def start(user):
 def semester_test():
     semester = Semester.getOrCreateCurrent()
     return semester.getname()
-
 
 
 @app.route('/test_firebase_login')
@@ -85,6 +109,17 @@ if __name__ == '__main__':
     # the "static" directory. See:
     # http://flask.pocoo.org/docs/1.0/quickstart/#static-files. Once deployed,
     # App Engine itself will serve those files as configured in app.yaml.
+
+    # TODO: test code move to test file
+    memcache.set("Hello", "Skojjt")
+    assert(memcache.get("Hello"), "Skojjt") # if this fails there is a problem with Redis
+
+    testuser = ScoutnetUser("Test User", "abc@xyz.qwe", 1111, 2222, 3333, True)
+    memcache.set_picked("testuser", testuser)
+    x = memcache.get_unpickled("testuser")
+    assert(x.getname() == testuser.getname())
+
+    # main app:
     app.run(host='127.0.0.1', port=8080, debug=True)
 
 ##############################################################################

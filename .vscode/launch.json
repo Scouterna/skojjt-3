@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "GAE PY3",
+            "name": "Debug main",
             "envFile": "/env/pyvenv.cfg",
             "type": "python",
             "request": "launch",
