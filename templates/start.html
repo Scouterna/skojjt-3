@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <title>Skojjt</title>
+</head>
+<body>
+
+<h1>Skojjt</h1>
+<img src="/static/logo.png"/>
+<a href="/logout/">Logout</a>
+<div id="login-info">
+  <h2>Login info:</h2>
+  {% if user %}
+    <dl>
+      <dt>Name</dt><dd>{{ user.getname() }}</dd>
+      <dt>Email</dt><dd>{{ user.email }}</dd>
+    </dl>
+  {% elif error_message %}
+  <p>No user!</p>
+  <p>Error: {{ error_message }}</p>
+  {% endif %}
+</div>
+</body>
+</html>

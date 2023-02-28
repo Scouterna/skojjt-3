@@ -4,9 +4,9 @@ from google.cloud.ndb import context as context_module
 import datetime
 import logging
 from functools import wraps
+from memcache import global_cache
 
 datastore_client = ndb.Client()
-
 
 # Assume GOOGLE_APPLICATION_CREDENTIALS is set in environment.
 client = ndb.Client()

@@ -41,9 +41,9 @@ window.addEventListener('load', function () {
     alert("Failed to send login to server");
   }
 
-  function postIdTokenToSessionLogin(idToken, csrfToken) {
+  function postIdTokenToSessionLogin(idToken) {
     var XHR = new XMLHttpRequest();
-    var formdata = 'idToken=' + idToken + '&' + 'csrfToken=' + csrfToken;
+    var formdata = 'idToken=' + idToken;
 
     XHR.addEventListener('load', function(event) 
     {
@@ -72,11 +72,9 @@ window.addEventListener('load', function () {
         // SECURITY NOTE: As cookies can easily be modified, only put the
         // token (which is verified server-side) in a cookie; do not add other
         // user information.
-        console.log("trying to get csrfToken");
-        const csrfToken = getCookie('csrfToken');
         console.log("setting the document.cookie: token=" + idToken);
         document.cookie = "token=" + idToken
-        return postIdTokenToSessionLogin(idToken, csrfToken);
+        return postIdTokenToSessionLogin(idToken);
       });
     } else {
       // User is signed out.
