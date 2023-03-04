@@ -14,7 +14,7 @@ class TestScoutnetUser(unittest.TestCase):
         assert(testuser.getAllGroupIds() == [])
 
     def testSingleMemberScoutnetUser(self):
-        # multiple membership, leader in two groups            
+        # single membership, leader in one group
         roles = json.loads('{"1137":{"6":"leader"}}')
         testuser = ScoutnetUser("Test User", "abc@xyz.qwe", 1234, roles)
         assert(testuser.getname() == "Test User")
@@ -63,11 +63,11 @@ class TestScoutnetUser(unittest.TestCase):
 
 
     def testParseUserMemberScoutnetUser2(self):
-        test_user2 = """{"sub": "3147713@scoutnet.se", "firstname": "Test2", "role": ["*:*:company_signatory", "*:*:leader", "*:*:member_registrar", "*:*:other_leader", "*:*:police_check_admin", "*:*:project_admin", "*:*:vice_leader", "*:*:webmaster", "group:*:*", "group:*:company_signatory", "group:*:leader", "group:*:member_registrar", "group:*:police_check_admin", "group:*:webmaster", "group:1137:*", "group:1137:company_signatory", "group:1137:leader", "group:1137:member_registrar", "group:1137:police_check_admin", "group:1137:webmaster", "project:*:*", "project:*:leader", "project:*:project_admin", "project:3184:*", "project:3184:leader", "project:3184:project_admin", "troop:*:*", "troop:*:leader", "troop:*:other_leader", "troop:*:vice_leader", "troop:16763:*", "troop:16763:other_leader", "troop:16763:vice_leader", "troop:19171:*", "troop:19171:leader"], "group_name": ["Masthugget Majornas Scoutk\\u00e5r", "Tynnereds Scoutk\\u00e5r"], "displayName": "Test2 Efternamn2", "roles": "{\\"organisation\\":[],\\"region\\":[],\\"project\\":{\\"3184\\":{\\"65\\":\\"leader\\",\\"138\\":\\"project_admin\\"}},\\"network\\":[],\\"corps\\":[],\\"district\\":[],\\"group\\":{\\"1137\\":{\\"36\\":\\"webmaster\\",\\"6\\":\\"leader\\",\\"9\\":\\"member_registrar\\",\\"49\\":\\"company_signatory\\",\\"1238\\":\\"police_check_admin\\"}},\\"troop\\":{\\"16763\\":{\\"3\\":\\"other_leader\\",\\"4\\":\\"vice_leader\\"},\\"19171\\":{\\"2\\":\\"leader\\"}},\\"patrol\\":[]}", "above_15": "1", "lastname": "Efternamn2", "group_no": ["32028", "32048"], "uid": "3147713", "group_id": ["1126", "1137"], "dob": "1909-07-30", "email": "Test2@testserver.se", "firstlast": "Test2.Efternamn2"}"""
+        test_user2 = """{"sub": "987654321@scoutnet.se", "firstname": "Test2", "role": ["*:*:company_signatory", "*:*:leader", "*:*:member_registrar", "*:*:other_leader", "*:*:police_check_admin", "*:*:project_admin", "*:*:vice_leader", "*:*:webmaster", "group:*:*", "group:*:company_signatory", "group:*:leader", "group:*:member_registrar", "group:*:police_check_admin", "group:*:webmaster", "group:1137:*", "group:1137:company_signatory", "group:1137:leader", "group:1137:member_registrar", "group:1137:police_check_admin", "group:1137:webmaster", "project:*:*", "project:*:leader", "project:*:project_admin", "project:3184:*", "project:3184:leader", "project:3184:project_admin", "troop:*:*", "troop:*:leader", "troop:*:other_leader", "troop:*:vice_leader", "troop:16763:*", "troop:16763:other_leader", "troop:16763:vice_leader", "troop:19171:*", "troop:19171:leader"], "group_name": ["Masthugget Majornas Scoutk\\u00e5r", "Tynnereds Scoutk\\u00e5r"], "displayName": "Test2 Efternamn2", "roles": "{\\"organisation\\":[],\\"region\\":[],\\"project\\":{\\"3184\\":{\\"65\\":\\"leader\\",\\"138\\":\\"project_admin\\"}},\\"network\\":[],\\"corps\\":[],\\"district\\":[],\\"group\\":{\\"1137\\":{\\"36\\":\\"webmaster\\",\\"6\\":\\"leader\\",\\"9\\":\\"member_registrar\\",\\"49\\":\\"company_signatory\\",\\"1238\\":\\"police_check_admin\\"}},\\"troop\\":{\\"16763\\":{\\"3\\":\\"other_leader\\",\\"4\\":\\"vice_leader\\"},\\"19171\\":{\\"2\\":\\"leader\\"}},\\"patrol\\":[]}", "above_15": "1", "lastname": "Efternamn2", "group_no": ["32028", "32048"], "uid": "987654321", "group_id": ["1126", "1137"], "dob": "1909-07-30", "email": "Test2@testserver.se", "firstlast": "Test2.Efternamn2"}"""
         testuser = ScoutnetUser.parse_user(json.loads(test_user2))
         assert(testuser.getname() == "Test2 Efternamn2")
         assert(testuser.email == "Test2@testserver.se")
-        assert(testuser.uid == '3147713')
+        assert(testuser.uid == '987654321')
         group_ids = testuser.getAllGroupIds()
         assert(len(group_ids) == 1)
         assert("1137" in group_ids)

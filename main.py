@@ -1,10 +1,9 @@
 import logging
-import datetime
 from flask import Flask, render_template, request, make_response, redirect
 from google.auth.transport import requests
 from google.cloud import ndb
-import google.oauth2.id_token
-from access import user_access, login_user_from_id_token, remove_user
+import usersessions
+from user_access import user_access
 from data import dbcontext, Semester, datastore_client
 from memcache import memcache
 from scoutnetuser import ScoutnetUser
@@ -26,7 +25,7 @@ def logout():
     logging.info("In logout()")
     session_id = request.cookies.get("session_id")
     if session_id and len(session_id) > 0:
-        remove_user(session_id)
+        usersessions.remove_user_session(session_id)
     response = make_response(render_template('signed_out.html'), 200)
     response.set_cookie('session_id', "")
     return response
@@ -37,10 +36,7 @@ def session_login():
         logging.error("Login request is missing data")
 
     idToken = request.form['idToken']
-    #csrfToken = request.form['csrfToken']
-    #logging.info("idToken=" + idToken)
-    #logging.info("csrfToken" + csrfToken)
-    (_, session_id) = login_user_from_id_token(idToken)
+    (_, session_id) = usersessions.login_user_from_id_token(idToken)
     response = make_response(redirect('/'))
     response.set_cookie('session_id', session_id)
     return response
