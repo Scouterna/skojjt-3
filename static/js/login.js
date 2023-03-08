@@ -55,8 +55,17 @@ window.addEventListener('load', function () {
       if (onfailure) onfailure();
     });
 
-    XHR.open('POST', '/session_login/');
+    XHR.open('POST', '/session_login/', true);
     XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    XHR.onload = function () {
+      console.log(this.responseText);
+      var after_login_url = getCookie('after_login_url');
+      if (after_login_url && after_login_url.length() > 0) {
+        document.cookie = "after_login_url= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
+        console.log('after_login_url=' + after_login_url);
+        window.location.href = after_login_url;
+      }
+    };
     XHR.send(formdata);
   }
 
@@ -87,7 +96,7 @@ window.addEventListener('load', function () {
       document.getElementById('login-info').hidden = true;
       // Clear the token cookie.
       console.log("clearing the document.cookie");
-      document.cookie = "token=";
+      document.cookie = "token= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
     }
   }, function (error) {
     console.log(error);

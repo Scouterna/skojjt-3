@@ -1,12 +1,9 @@
-<!doctype html>
-<html>
-<head>
-  <title>Skojjt</title>
-</head>
+{% include "header.html" %}
+
 <body>
 
 <h1>Skojjt</h1>
-<img src="/static/logo.png"/>
+<img src="/img/logo.png"/>
 <a href="/logout/">Logout</a>
 <div id="login-info">
   <h2>Login info:</h2>
@@ -19,6 +16,12 @@
   <p>No user!</p>
   <p>Error: {{ error_message }}</p>
   {% endif %}
+
+  <hr/>
+	<div class="btn-toolbar">
+	<a href="/import/" class="btn btn-lg btn-default"><span class="glyphicon glyphicon-import"></span> Import</a>
+	</div>
+
 </div>
 </body>
 </html>

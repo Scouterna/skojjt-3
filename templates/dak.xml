@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Aktivitetskort xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://sverigesforeningssystem.se/importSchema.xsd">
+  <Kommun kommunID="{{dak.kommun_id}}" version="2.2">
+      <Foerening foereningsID="{{dak.forenings_id}}" foereningsNamn="{{dak.foerenings_namn}}" organisationsnummer="{{dak.organisationsnummer}}">
+      <Naervarokort NaervarokortNummer="{{dak.kort.naervarokort_nummer}}">
+        <Aktivitet>{{dak.kort.aktivitet}}</Aktivitet>
+        <Lokal>{{dak.kort.lokal}}</Lokal>
+        <NamnPaaKort>{{dak.kort.namn_paa_kort}}</NamnPaaKort>
+        <Sammankomster>
+        {% for sammankomst in dak.kort.sammankomster %}
+          <Sammankomst Datum="{{sammankomst.get_date_string()}}" kod="{{sammankomst.kod}}">
+            <StartTid>{{sammankomst.get_start_time_string()}}</StartTid>
+            <StoppTid>{{sammankomst.get_stop_time_string()}}</StoppTid>
+            <Aktivitet>{{sammankomst.aktivitet}}</Aktivitet>
+            <Lokal>{{dak.kort.lokal}}</Lokal>
+            <Typ>{{sammankomst.typ}}</Typ>
+            <Metod>Add</Metod>
+            <DeltagarLista>
+            {% for deltagare in sammankomst.deltagare %}
+              <Deltagare id="{{deltagare.uid}}">
+                <Handikapp>false</Handikapp>
+                <Naervarande>true</Naervarande>
+              </Deltagare>
+            {% endfor %}
+            </DeltagarLista>
+            <LedarLista>
+            {% for deltagare in sammankomst.ledare %}
+              <Ledare id="{{deltagare.uid}}">
+                <Handikapp>false</Handikapp>
+                <Naervarande>true</Naervarande>
+              </Ledare>
+            {% endfor %}
+            </LedarLista>
+          </Sammankomst>
+        {% endfor%}
+        </Sammankomster>
+      </Naervarokort>
+    </Foerening>
+  </Kommun>
+  <DeltagarRegister>
+  {% for deltagare in dak.kort.deltagare %}
+    <Deltagare id="{{deltagare.uid}}">
+      <Foernamn>{{deltagare.foernamn}}</Foernamn>
+      <Efternamn>{{deltagare.efternamn}}</Efternamn>
+      <Personnummer>{{deltagare.personnummer}}</Personnummer>
+    </Deltagare>
+  {% endfor %}
+  </DeltagarRegister>
+  <LedarRegister>
+   {% for deltagare in dak.kort.ledare %}
+    <Ledare id="{{deltagare.uid}}">
+      <Foernamn>{{deltagare.foernamn}}</Foernamn>
+      <Efternamn>{{deltagare.efternamn}}</Efternamn>
+      <Personnummer>{{deltagare.personnummer}}</Personnummer>
+      <Epost>{{deltagare.epost}}</Epost>
+      <MobilNr>{{deltagare.mobil_nr}}</MobilNr>
+    </Ledare>
+    {% endfor %}
+  </LedarRegister>
+</Aktivitetskort>

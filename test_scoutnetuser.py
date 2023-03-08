@@ -11,6 +11,7 @@ class TestScoutnetUser(unittest.TestCase):
         assert(testuser.getname() == "Test User")
         assert(testuser.email == "abc@xyz.qwe")
         assert(testuser.uid == 1234)
+        assert(testuser.key == 1234)
         assert(testuser.getAllGroupIds() == [])
 
     def testSingleMemberScoutnetUser(self):

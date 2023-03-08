@@ -62,8 +62,25 @@ class ScoutnetUser():
         if 'roles' in user_data:
             roles = ScoutnetUser.loads_json_if_string(user_data['roles']) # this is a json string (must be a bug in scoutid)
             if 'group' in roles:
+                # Assuming here that if you are leader in multiple groups you will get a role on each group having an array of groups with roles
+                # yet to be verified.
                 group_roles = roles['group']
 
         user = ScoutnetUser(display_name, email, uid, group_roles)
         logging.info(f"User: {user.getname()}, {user.email}")
         return user
+
+    @property
+    def activeSemester(self):
+        return self.active_semester
+    
+    @activeSemester.setter
+    def activeSemester(self, value):
+        self.active_semester = value
+
+    @property
+    def key(self) -> str:
+        return self.uid
+
+    def put(self):
+        pass # TODO: store active_semester in db

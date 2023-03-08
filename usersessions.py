@@ -7,6 +7,7 @@ from scoutnetuser import ScoutnetUser
 from memcache import memcache
 
 
+
 class UserSessionEntry():
     def __init__(self, user: ScoutnetUser, expires: datetime):
         self.user = user
@@ -25,8 +26,14 @@ class UserSessionEntry():
 
 local_user_cache: dict[str, UserSessionEntry] = {}
 
+def get_session_id_key(session_id:str) -> str:
+    """
+    get_session_id_key adds a prefix to the session id so that we can query memcache server for all sessions
+    """
+    return "si:" + session_id
+
 def get_user_from_session_id(session_id: str) -> ScoutnetUser:
-    key = session_id
+    key = get_session_id_key(session_id)
     if key in local_user_cache:
         user_session_entry = local_user_cache[key]
     else:
@@ -41,17 +48,17 @@ def get_user_from_session_id(session_id: str) -> ScoutnetUser:
             return None
         else:
             user_session_entry.extend_expire()
-            memcache.set_expire(key, user_session_entry.get_expire_seconds_from_now())
+            memcache.set(key, user_session_entry.get_expire_seconds_from_now())
             return user_session_entry.user
 
-def add_user_session(subject_identifier: str, expires: datetime, user: ScoutnetUser) -> None:
+def add_user_session(session_id: str, expires: datetime, user: ScoutnetUser) -> None:
     user_session_entry = UserSessionEntry(user, expires)
-    key = subject_identifier
+    key = get_session_id_key(session_id)
     local_user_cache[key] = user_session_entry
-    memcache.replace_picked(key, user_session_entry, user_session_entry.get_expire_seconds_from_now())
+    memcache.replace_pickled(key, user_session_entry, user_session_entry.get_expire_seconds_from_now())
 
-def remove_user_session(subject_identifier:str) -> None:
-    key = subject_identifier
+def remove_user_session(session_id:str) -> None:
+    key = get_session_id_key(session_id)
     if key in local_user_cache:
         del local_user_cache[key]
     memcache.remove(key)
@@ -71,4 +78,29 @@ def parse_and_add_user(subject_identifier: str, expires: datetime, user_data) ->
     if not user:
         return None
     add_user_session(subject_identifier, expires, user)
+    add_uid_session_lookup(user, subject_identifier)
     return user
+
+
+local_uid_session_lookup: dict[str, str] = {}
+
+def get_uid_key(uid: str) -> str:
+    """
+    get_uid_key adds a prefix to the session id so that we can query memcache server for all sessions
+    """
+    return "si:" + uid
+
+def add_uid_session_lookup(user, session_id):
+    local_uid_session_lookup[user.key] = session_id
+    expires_secs = 2*60*60 # default to 2 hours, to avoid leaking ids.
+    memcache.replace("uid:" + user.key, session_id, expires_secs)
+
+def get_user_by_uid(uid: str) -> ScoutnetUser|None:
+    session_id = None
+    if uid in local_uid_session_lookup:
+        session_id = local_uid_session_lookup[uid]
+    else:
+        session_id = memcache.get("uid:" + uid)
+        
+    if session_id:
+        return get_user_from_session_id(session_id)

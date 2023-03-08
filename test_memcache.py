@@ -8,7 +8,10 @@ class TestMemcache(unittest.TestCase):
     def testMemcacheGetSet(self):
         # TODO: test code move to test file
         memcache.set("TestKey", "TestData")
-        assert(memcache.get("TestKey") == b"TestData")
+        assert(memcache.get("TestKey") == "TestData")
+
+    def testNonExisting(self):
+        assert(memcache.get('key_should_not_exist') == None)
 
     def testMemcachePickled(self):
         testuser = ScoutnetUser("Test User", "abc@xyz.qwe", 1111, {})
