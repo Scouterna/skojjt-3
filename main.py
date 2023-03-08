@@ -1,100 +1,111 @@
-# Copyright 2018 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-import datetime
-
-from flask import Flask, render_template, request
+import logging
+from flask import Flask, render_template, request, make_response, redirect, url_for
 from google.auth.transport import requests
-from google.cloud import ndb
-import google.oauth2.id_token
+from google.appengine.api import wrap_wsgi_app
+import usersessions
+from user_access import user_access
+from dbcontext import dbcontext
+from data import Semester
+#from memcache import memcache
+from google.appengine.api import memcache as my_memcache # TODO: investigate this
+
+from scoutnetuser import ScoutnetUser
+
+logging.getLogger().setLevel(logging.INFO) # make sure info logs are displayed on the console
+
+my_memcache.set("test", "123")
+assert(my_memcache.get("test") == "123") # on dev this must run through dev_appserver.py on linux/macos (not windows)
 
 firebase_request_adapter = requests.Request()
 
-# [START gae_python39_datastore_store_and_fetch_user_times]
-# [START gae_python3_datastore_store_and_fetch_user_times]
+# setting the static folder to root url, then all subfolders will be from / on the server.
+app = Flask(__name__, static_url_path='')
 
-# [END gae_python3_datastore_store_and_fetch_user_times]
-# [END gae_python39_datastore_store_and_fetch_user_times]
-app = Flask(__name__)
+# this is to get the app engine services back
+app.wsgi_app = wrap_wsgi_app(app.wsgi_app, use_deferred=True)
 
-
-class Visit(ndb.Model):
-    timestamp = ndb.DateTimeProperty()
-
-
-# [START gae_python39_datastore_store_and_fetch_user_times]
-# [START gae_python3_datastore_store_and_fetch_user_times]
-def store_time(email, dt):
-    client = ndb.Client()
-    with client.context():
-        ancestor_key = ndb.Key("User", email)
-        visit = Visit(parent=ancestor_key,
-                      timestamp=dt)
-        visit.put(visit)
-
-
-def fetch_times(email, limit):
-    client = ndb.Client()
-    with client.context():
-        ancestor_key = ndb.Key('User', email)
-        query = Visit.query(ancestor=ancestor_key).order(-Visit.timestamp)
-        times = [f"{v.timestamp}" for v in query]
-        print(times)
-        return times
-# [END gae_python3_datastore_store_and_fetch_user_times]
-# [END gae_python39_datastore_store_and_fetch_user_times]
+# page routes:
+#from groupsummary import groupsummary
+#from persons import persons
+#from scoutgroupinfo import scoutgroupinfo
+#from start import start
+from imports import import_page
+from progress import progress
+#from admin import admin
+from tasks import tasks
+#from terminsprogram import terminsprogram
+#from stats import stats
+#app.register_blueprint(start, url_prefix='/start')
+#app.register_blueprint(persons, url_prefix='/persons')
+#app.register_blueprint(scoutgroupinfo, url_prefix='/scoutgroupinfo')
+#app.register_blueprint(groupsummary, url_prefix='/groupsummary')
+app.register_blueprint(import_page, url_prefix='/import')
+app.register_blueprint(progress, url_prefix='/progress')
+#app.register_blueprint(admin, url_prefix='/admin')
+app.register_blueprint(tasks, url_prefix='/tasks')
+#app.register_blueprint(badges, url_prefix='/badges')
+#app.register_blueprint(terminsprogram, url_prefix='/terminsprogram')
+#app.register_blueprint(stats, url_prefix='/stats')
 
 
-# [START gae_python39_datastore_render_user_times]
-# [START gae_python3_datastore_render_user_times]
+# user session handling
+@app.route('/login/')
+def login():
+    logging.info("In login()")
+    return render_template('login.html')
+
+@app.route('/logout/')
+def logout():
+    logging.info("In logout()")
+    session_id = request.cookies.get("session_id")
+    if session_id and len(session_id) > 0:
+        usersessions.remove_user_session(session_id)
+    response = make_response(render_template('signed_out.html'), 200)
+    response.set_cookie('session_id', "")
+    return response
+
+@app.route('/session_login/', methods=["POST"])
+def session_login():
+    if 'idToken' not in request.form:
+        logging.error("Login request is missing data")
+
+    idToken = request.form['idToken']
+    (_, session_id) = usersessions.login_user_from_id_token(idToken)
+    response = make_response(redirect('/'))
+    response.set_cookie('session_id', session_id)
+    return response
+
+
+@app.route('/sign_in_success/')
+def sign_in_sucess():
+    logging.info("sign_in_success()")
+    logging.info(f"request.cookies={str(request.cookies)}")
+    return render_template('signed_in.html')
+
+
+# login flow -> @user_access -> /login -> @user_access -> / 
 @app.route('/')
-def root():
-    # Verify Firebase auth.
-    id_token = request.cookies.get("token")
-    error_message = None
-    claims = None
-    times = None
-    user_data = None
-
-    if id_token:
-        try:
-            # Verify the token against the Firebase Auth API. This example
-            # verifies the token on each page load. For improved performance,
-            # some applications may wish to cache results in an encrypted
-            # session store (see for instance
-            # http://flask.pocoo.org/docs/1.0/quickstart/#sessions).
-            claims = google.oauth2.id_token.verify_firebase_token(
-                id_token, firebase_request_adapter)
-
-            user_data = claims['firebase']['sign_in_attributes']
-            # print(user_data)
-            email = user_data['email']
-
-            store_time(email, datetime.datetime.now())
-            times = fetch_times(email, 10)
-
-        except ValueError as exc:
-            # This will be raised if the token is expired or any other
-            # verification checks fail.
-            error_message = str(exc)
-
+@dbcontext
+@user_access
+def home(user: ScoutnetUser):
+    logging.info("In home()")
     return render_template(
-        'index.html',
-        user_data=user_data, error_message=error_message, times=times)
-# [END gae_python3_datastore_render_user_times]
-# [END gae_python39_datastore_render_user_times]
+        'start.html',
+        user=user,
+        starturl='/start/',
+        personsurl='',
+        badgesurl='',
+        logouturl=url_for("logout"))
 
+
+@app.route('/semester_test')
+@dbcontext
+def semester_test():
+    semester = Semester.getOrCreateCurrent()
+    return semester.getname()
+
+
+##############################################################################
 
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
@@ -105,4 +116,11 @@ if __name__ == '__main__':
     # the "static" directory. See:
     # http://flask.pocoo.org/docs/1.0/quickstart/#static-files. Once deployed,
     # App Engine itself will serve those files as configured in app.yaml.
+
+    memcache.set("TestMemcacheKey", "TestMemcacheData")
+    assert(memcache.get("TestMemcacheKey") == "TestMemcacheData") # if this fails, check the redis server
+
+    # main app:
     app.run(host='127.0.0.1', port=8080, debug=True)
+
+##############################################################################

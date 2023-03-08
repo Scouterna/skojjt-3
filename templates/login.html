@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <title>Login</title>
+    <script src="https://www.gstatic.com/firebasejs/7.14.5/firebase-app.js"></script>;
+    <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-auth.js"></script>
+    <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0EAJt3vXDvwsv0ZjEIgODMZArSJVZlgc",
+      authDomain: "skojjt-3.firebaseapp.com",
+      projectId: "skojjt-3",
+      storageBucket: "skojjt-3.appspot.com",
+      messagingSenderId: "137764040190",
+      appId: "1:137764040190:web:8d71d7486a1394ddd7a4af"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.css">
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+  <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<h1>Login</h1>
+
+<div id="firebaseui-auth-container"></div>
+
+<button id="sign-out" hidden=true>Sign Out</button>
+
+<div id="login-info" hidden=true>
+  <h2>Login info:</h2>
+  {% if user %}
+    <dl>
+      <dt>Name</dt><dd>{{ user.getname() }}</dd>
+      <dt>Email</dt><dd>{{ user.email }}</dd>
+    </dl>
+  {% elif error_message %}
+  <p>No user!</p>
+  <p>Error: {{ error_message }}</p>
+  {% endif %}
+</div>
+</body>
+</html>
