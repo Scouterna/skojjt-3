@@ -1,4 +1,6 @@
 runtime: python311
+# https://github.com/GoogleCloudPlatform/appengine-python-standard
+app_engine_apis: true
 
 handlers:
   # This configures Google App Engine to serve the files in the app's static
@@ -17,15 +19,14 @@ inbound_services:
 - mail
 - mail_bounce
 
-# https://github.com/GoogleCloudPlatform/appengine-python-standard
-app_engine_apis: true
 
 env_variables:
   DEFERRED_USE_CROSS_COMPATIBLE_PICKLE_PROTOCOL: 'True'
-  # TODO: find a way to store the environment in the instance.
-  REDISHOST: '10.220.95.155'
-  REDISPORT: '6379'
-  REDIS_CACHE_URL: 'redis://10.220.95.155:6379'
+  MEMCACHE_USE_CROSS_COMPATIBLE_PROTOCOL: 'True'
+  NDB_USE_CROSS_COMPATIBLE_PICKLE_PROTOCOL: 'True'
+#  REDISHOST: '10.220.95.155'
+#  REDISPORT: '6379'
+#  REDIS_CACHE_URL: 'redis://10.220.95.155:6379'
 
 # subnet :10.220.95.144/28
 #vpc_access_connector:

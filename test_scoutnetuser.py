@@ -1,5 +1,5 @@
 import unittest
-from memcache import memcache
+from memcache_wrapper import memcache
 from scoutnetuser import ScoutnetUser
 import json
 

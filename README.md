@@ -14,7 +14,12 @@ Saker som behöver fixas för att fungera på Python 3.x:
 * Ny inloggningsprocess, ScoutID via Firebase. Automatisk google inloggning finns inte längre.
 * Ny databaskoppling, varje access till databasen kräver ett databas context.
 * Databas-modellen ndb.Model är på väg ut men man kan man använda om man specar versioner av libbar noga.
-* Automatisk Memcache finns inte längre, man får köra en egen Redis.
+* Automatisk Memcache finns inte längre, man får köra en egen Redis eller Memcached.
+
+### App engine apier för Python 3
+Uppdatering: Google har tagit en del av sitt förnuft till fånga och har gjort bakåtkompatibla app engine apier.
+https://github.com/GoogleCloudPlatform/appengine-python-standard
+
 
 
 ## Building an appengine app in Python 3

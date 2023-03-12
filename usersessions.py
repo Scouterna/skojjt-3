@@ -4,7 +4,9 @@ from xmlrpc.client import Boolean
 from google.auth.transport import requests
 import google.oauth2.id_token
 from scoutnetuser import ScoutnetUser
-from memcache import memcache
+#from memcache_wrapper import memcache
+from google.appengine.api import memcache
+
 
 
 
@@ -37,7 +39,7 @@ def get_user_from_session_id(session_id: str) -> ScoutnetUser:
     if key in local_user_cache:
         user_session_entry = local_user_cache[key]
     else:
-        user_session_entry = memcache.get_unpickled(key)
+        user_session_entry = memcache.get(key)
 
     if user_session_entry:
         if user_session_entry.is_expired():
@@ -48,14 +50,14 @@ def get_user_from_session_id(session_id: str) -> ScoutnetUser:
             return None
         else:
             user_session_entry.extend_expire()
-            memcache.set(key, user_session_entry.get_expire_seconds_from_now())
+            memcache.replace(key, user_session_entry, user_session_entry.get_expire_seconds_from_now())
             return user_session_entry.user
 
 def add_user_session(session_id: str, expires: datetime, user: ScoutnetUser) -> None:
     user_session_entry = UserSessionEntry(user, expires)
     key = get_session_id_key(session_id)
     local_user_cache[key] = user_session_entry
-    memcache.replace_pickled(key, user_session_entry, user_session_entry.get_expire_seconds_from_now())
+    memcache.replace(key, user_session_entry, user_session_entry.get_expire_seconds_from_now())
 
 def remove_user_session(session_id:str) -> None:
     key = get_session_id_key(session_id)

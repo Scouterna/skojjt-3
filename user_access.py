@@ -13,16 +13,17 @@ def user_access(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        logging.info(f"{request.method} {request.url} {func.__name__} user_access wrapper")
+        #logging.info(f"{request.method} {request.url} {func.__name__} user_access wrapper")
         session_id = request.cookies.get("session_id")
         if session_id:
             user = usersessions.get_user_from_session_id(session_id)
             if user:
+                logging.info(f"{request.method} {request.url} {func.__name__} uid:{user.uid}")
                 return func(user, *args, **kwargs)
 
         logging.info(f"{request.method} {request.url} {func.__name__} <no-user>->/login/")
         response = make_response(redirect(url_for("login")))
-        response.set_cookie("after_login_url", request.url) # TODO: make client go to this after logon.
+        response.set_cookie("after_login_url", request.url)
         return response
 
     return wrapper
