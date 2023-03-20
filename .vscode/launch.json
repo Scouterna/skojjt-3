@@ -5,10 +5,31 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug main",
+            "name": "dev_appserver",
+            "request": "launch",
+            "type": "python",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "envFile": "/env/pyvenv.cfg",
+            "python": "python3",
+            "program": "/lib/google-cloud-sdk/bin/dev_appserver.py",
+            "args": [
+                "app.yaml",
+                "-A", "skojjt",
+                "--port", "8080",
+                "--admin_port", "8000",
+                "--api_port", "56035",
+                "--enable_console",
+                "--skip_sdk_update_check",
+                "--support_datastore_emulator", "False"
+            ]
+        },
+        {
+            "name": "python main.py",
             "envFile": "/env/pyvenv.cfg",
             "type": "python",
             "request": "launch",
+            "python": "python3",
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true

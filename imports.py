@@ -8,7 +8,7 @@ from data import Semester
 from dataimport import RunScoutnetImport
 from progress import TaskProgress
 from scoutnetuser import ScoutnetUser
-from dbcontext import dbcontext, datastore_client
+#from dbcontext import dbcontext, datastore_client
 from user_access import user_access
 import usersessions
 import traceback
@@ -17,7 +17,7 @@ import traceback
 import_page = Blueprint('import_page', __name__, template_folder='templates')
 
 @import_page.route('/', methods = ['POST', 'GET'])
-@dbcontext
+#@dbcontext
 @user_access
 def import_(user: ScoutnetUser):
     
@@ -79,8 +79,6 @@ def importTask(api_key: str, groupid: str, semester_key, taskProgress_key, user_
             progress.failed = True
         else:
             progress.info("Import klar")
-            if user.groupaccess is not None:
-                progress.info('<a href="/start/%s/">Gå till scoutkåren</a>' % (user.groupaccess.urlsafe()))
     except Exception as e: # catch all exceptions so that defer stops running it again (automatic retry)
         progress.error("Importfel: " + str(e) + "CS:" + traceback.format_exc())
 

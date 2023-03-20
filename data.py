@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from google.cloud import ndb
+#from google.cloud import ndb
+from google.appengine.ext import ndb
+from google.appengine.api import memcache
 import datetime
 import logging
-from memcache import memcache
+#from memcache_wrapper import memcache
 
 
 class PropertyWriteTracker(ndb.Model):
@@ -111,7 +113,14 @@ class ScoutGroup(ndb.Model):
 
     @staticmethod
     def getbyname(name):
-        return ScoutGroup.get_by_id(ScoutGroup.getid(name), use_memcache=True)
+        return ScoutGroup.get_by_id(ScoutGroup.getid(name))
+
+    @staticmethod
+    def get_by_scoutnet_id(id):
+        result = ScoutGroup.query(ScoutGroup.scoutnetID==id).fetch(1)
+        if len(result) == 1:
+            return result[0]
+        return None
 
     @staticmethod
     def create(name, scoutnetID):
@@ -130,6 +139,10 @@ class ScoutGroup(ndb.Model):
     def canAddToWaitinglist(self):
         return self.scoutnetID != None and self.scoutnetID != "" and self.apikey_waitinglist != None and self.apikey_waitinglist != ""
     
+    def urlsafe(self) -> str:
+        return self.scoutnetID
+    
+
 # avdelning
 class Troop(ndb.Model):
     name = ndb.StringProperty()
@@ -461,37 +474,15 @@ class UserPrefs(ndb.Model):
     userid = ndb.StringProperty(required=True)
     hasaccess = ndb.BooleanProperty(required=True)
     canimport = ndb.BooleanProperty(required=False)
-    hasadminaccess = ndb.BooleanProperty(default=False, required=True)
+    #hasadminaccess = ndb.BooleanProperty(default=False, required=True)
     name = ndb.StringProperty(required=True)
     activeSemester = ndb.KeyProperty(kind=Semester)
-    groupaccess = ndb.KeyProperty(kind=ScoutGroup, required=False, default=None)
-    groupadmin = ndb.BooleanProperty(required=False, default=False)
+    #groupaccess = ndb.KeyProperty(kind=ScoutGroup, required=False, default=None)
+    #groupadmin = ndb.BooleanProperty(required=False, default=False)
     email = ndb.StringProperty(required=False)
 
     def hasAccess(self):
         return self.hasaccess
-
-    def hasGroupAccess(self, group):
-        """
-        :type group: ScoutGroup
-        :rtype bool
-        """
-        return self.hasGroupKeyAccess(group.key())
-
-    def hasGroupKeyAccess(self, group_key):
-        """
-        :param group_key: key for ScoutGroup
-        :type group_key: google.appengine.ext.ndb.Key
-        :rtype bool
-        """
-        if not self.hasaccess:
-            return False
-        if self.hasadminaccess:
-            return True
-        if self.groupaccess is not None and self.groupaccess == group_key:
-            return True
-        # TODO Multi-group access
-        return False
 
     def hasPersonAccess(self, person):
         """
@@ -510,9 +501,6 @@ class UserPrefs(ndb.Model):
         # This user already have all the information to get the the list of persons from scoutnet anyway.
         return True
 
-    def isGroupAdmin(self):
-        return self.hasadminaccess or (self.hasaccess and self.groupadmin and self.groupaccess != None)
-
     def getname(self):
         return self.name
 
@@ -522,17 +510,6 @@ class UserPrefs(ndb.Model):
         if '@' in self.name:
             return self.name
         return self.name + '@gmail.com'
-
-    def attemptAutoGroupAccess(self):
-        if self.groupaccess is None:
-            persons = Person.query(self.email == Person.email).fetch()
-            if persons is not None and len(persons) > 0:
-                person = persons[0]
-                if person.isLeader():
-                    self.groupaccess = person.scoutgroup
-                    self.hasaccess = True
-                    self.put()
-                    logging.info("Auto groupaccess for %s: %s %s", self.email, person.firstname, person.lastname)
 
     def updateMemcache(self):
         memcache.replace(self.userid, self)
@@ -545,8 +522,4 @@ class UserPrefs(ndb.Model):
     def create(user):
         return UserPrefs(id=user.user_id(), userid=user.user_id(), name=user.nickname(), email=user.email(), activeSemester=Semester.getOrCreateCurrent().key)
 
-    @staticmethod
-    def getAllGroupAdminEmails(sgroup_key):
-        """Returns a list of all groupadmins emails for a sgroup"""
-        return [u.getemail() for u in UserPrefs.query(UserPrefs.groupaccess==sgroup_key, UserPrefs.groupadmin==True).fetch()]
 

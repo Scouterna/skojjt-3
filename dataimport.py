@@ -3,7 +3,8 @@ import urllib.error
 from data import Person, ScoutGroup, Semester, Troop, TroopPerson
 from scoutnetuser import ScoutnetUser
 from progress import TaskProgress
-from google.cloud import ndb
+#from google.cloud import ndb
+from google.appengine.ext import ndb
 import scoutnet
 
 
@@ -40,13 +41,6 @@ def RunScoutnetImport(groupid: str, api_key: str, user: ScoutnetUser, semester: 
     if user.isSuperUser():
         return True
 
-    # Don't Connect the group if the user already has an connection
-    if user.groupaccess is not None:
-        return True
-
-    user.groupaccess = importer.importedScoutGroup_key
-    #user.hasaccess = True
-    #user.groupadmin = True
     user.put()
     if user.isGroupAdmin(groupid):
         result.append(u"Du är kåradmin och kan dela ut tillgång till din kår för andra användare")

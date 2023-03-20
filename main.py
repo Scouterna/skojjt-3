@@ -1,20 +1,19 @@
 import logging
+import sys
 from flask import Flask, render_template, request, make_response, redirect, url_for
 from google.auth.transport import requests
 from google.appengine.api import wrap_wsgi_app
 import usersessions
 from user_access import user_access
-from dbcontext import dbcontext
+#from dbcontext import dbcontext
 from data import Semester
-#from memcache import memcache
-from google.appengine.api import memcache as my_memcache # TODO: investigate this
+#from memcache_wrapper import memcache
+from google.appengine.api import memcache
+
 
 from scoutnetuser import ScoutnetUser
 
 logging.getLogger().setLevel(logging.INFO) # make sure info logs are displayed on the console
-
-my_memcache.set("test", "123")
-assert(my_memcache.get("test") == "123") # on dev this must run through dev_appserver.py on linux/macos (not windows)
 
 firebase_request_adapter = requests.Request()
 
@@ -23,6 +22,7 @@ app = Flask(__name__, static_url_path='')
 
 # this is to get the app engine services back
 app.wsgi_app = wrap_wsgi_app(app.wsgi_app, use_deferred=True)
+
 
 # page routes:
 #from groupsummary import groupsummary
@@ -80,12 +80,19 @@ def session_login():
 def sign_in_sucess():
     logging.info("sign_in_success()")
     logging.info(f"request.cookies={str(request.cookies)}")
-    return render_template('signed_in.html')
+    redirect_url = '/'
+    if 'after_login_url' in request.cookies:
+        redirect_url = request.cookies['after_login_url']
+        logging.info(f"redirecting client to {redirect_url}")
+
+    response = make_response(redirect(redirect_url))
+    response.delete_cookie('after_login_url')
+    return response
 
 
 # login flow -> @user_access -> /login -> @user_access -> / 
 @app.route('/')
-@dbcontext
+#@dbcontext
 @user_access
 def home(user: ScoutnetUser):
     logging.info("In home()")
@@ -99,7 +106,7 @@ def home(user: ScoutnetUser):
 
 
 @app.route('/semester_test')
-@dbcontext
+#@dbcontext
 def semester_test():
     semester = Semester.getOrCreateCurrent()
     return semester.getname()
@@ -117,10 +124,16 @@ if __name__ == '__main__':
     # http://flask.pocoo.org/docs/1.0/quickstart/#static-files. Once deployed,
     # App Engine itself will serve those files as configured in app.yaml.
 
+    logging.info(f"*** starting main ***")
+    logging.info(f"python version {sys.version}")
+
+    py3_11_or_greater = sys.version_info.major > 3 or (sys.version_info.major == 3 and sys.version_info.minor >= 11)
+    assert(py3_11_or_greater) # if this fails check your environment (source env/bin/activate)
+
     memcache.set("TestMemcacheKey", "TestMemcacheData")
-    assert(memcache.get("TestMemcacheKey") == "TestMemcacheData") # if this fails, check the redis server
+    assert(memcache.get("TestMemcacheKey") == b"TestMemcacheData") # if this fails, check the redis server
 
     # main app:
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='localhost', port=8080, debug=True)
 
 ##############################################################################

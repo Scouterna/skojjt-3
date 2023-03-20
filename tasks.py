@@ -5,11 +5,11 @@ import pickle
 import codecs
 import random
 import google.auth
-from google.cloud import ndb, tasks_v2
+from google.appengine.ext import ndb
 from flask import Blueprint, request
 from progress import TaskProgress
-from dbcontext import dbcontext
-from memcache import memcache
+#from dbcontext import dbcontext
+#from memcache_wrapper import memcache
 
 
 tasks = Blueprint('tasks', __name__, template_folder='templates')

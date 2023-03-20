@@ -4,7 +4,8 @@ import urllib.parse
 import json
 import logging
 from flask import Blueprint, render_template, request, make_response
-from memcache import memcache
+from google.appengine.api import memcache
+#from memcache_wrapper import memcache
 
 
 progress = Blueprint('progress_page', __name__, template_folder='templates')
@@ -26,7 +27,7 @@ class TaskProgress():
         self.key = self
         self.failed = False
         self.completed = None
-        memcache.replace_pickled(self.urlsafe(), self)
+        memcache.add(self.urlsafe(), self)
 
     def urlsafe(self):
         return urllib.parse.quote(self.name + str(self.created))
@@ -37,11 +38,11 @@ class TaskProgress():
             return url_safe.taskProgress
         if isinstance(url_safe, TaskProgress):
             return url_safe
-        return memcache.get_unpickled(urllib.parse.quote(url_safe))
+        return memcache.get(urllib.parse.quote(url_safe))
 
     def append(self, message):
         self.messages.append(message)
-        memcache.replace_pickled(self.urlsafe(), self)
+        memcache.replace(self.urlsafe(), self)
 
     def info(self, message):
         self.append(message)
@@ -58,7 +59,7 @@ class TaskProgress():
 
     def done(self):
         self.completed = datetime.datetime.now()
-        memcache.replace_pickled(self.urlsafe(), self)
+        memcache.replace(self.urlsafe(), self)
 
     def isRunning(self):
         return self.completed is None
